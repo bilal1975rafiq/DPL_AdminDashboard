@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiSearch, FiFilter, FiDownload, FiRefreshCw, FiCalendar, FiX } from 'react-icons/fi';
 import { api } from '../utils/api';
 import { format } from 'date-fns';
@@ -18,11 +18,9 @@ const VisitorTable = () => {
     endDate: ''
   });
 
-  useEffect(() => {
-    fetchVisitors();
-  }, [currentPage, searchTerm, filters]);
 
-  const fetchVisitors = async () => {
+
+  const fetchVisitors = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -31,14 +29,12 @@ const VisitorTable = () => {
         search: searchTerm,
         ...filters
       };
-      
       // Remove empty filters
       Object.keys(params).forEach(key => {
         if (params[key] === '') {
           delete params[key];
         }
       });
-      
       const response = await api.get('/visitors', { params });
       setVisitors(response.data.visitors);
       setTotalPages(response.data.pagination.pages);
@@ -48,7 +44,11 @@ const VisitorTable = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, filters]);
+
+  useEffect(() => {
+    fetchVisitors();
+  }, [fetchVisitors]);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
